@@ -352,37 +352,30 @@
 };
 
         // --- 3. التخاطب مع البيانات (فحص قوي للـ Local Storage والـ API) ---
-        async function loadAttendanceFromDB() {
-            try {
-                const response = await fetch(API_URL);
-                if (response.ok) {
-                    attendanceList = await response.json();
-                    localStorage.setItem('asas_attendance_list', JSON.stringify(attendanceList)); // تحديث الذاكرة المحلية
-                }
-            } catch (error) {
-                // الفشل هنا طبيعي في حال التجربة المحلية بدون سيرفر
-            }
-            renderAttendanceTable(); 
-        }
+       async function loadAttendanceFromDB() {
+    // 1. قراءة البيانات المحلية أولاً لضمان عدم اختفائها فوراً
+    let localData = JSON.parse(localStorage.getItem('asas_attendance_list')) || [];
+    if (localData.length > 0) {
+        attendanceList = localData;
+        renderAttendanceTable();
+    }
 
-        async function saveRecordToDB(record) {
-            // الحفظ المحلي أولاً لضمان عدم ضياع البيانات 100%
-            attendanceList.push(record);
-            localStorage.setItem('asas_attendance_list', JSON.stringify(attendanceList));
-            renderAttendanceTable();
-            showToast('تم تسجيل الحضور بنجاح!', 'success');
-
-            // محاولة الحفظ السحابي
-            try {
-                await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(record)
-                });
-            } catch (error) {
-                console.log("تم الحفظ محلياً (لا يوجد اتصال بالقاعدة السحابية حالياً)");
+    // 2. محاولة جلب التحديثات من السيرفر بالخلفية
+    try {
+        const response = await fetch(API_URL);
+        if (response.ok) {
+            const serverData = await response.json();
+            // إذا كان السيرفر يحتوي على بيانات صحيحة، نعتمدها ونحدث المحلي
+            if (serverData && Array.isArray(serverData) && serverData.length > 0) {
+                attendanceList = serverData;
+                localStorage.setItem('asas_attendance_list', JSON.stringify(attendanceList));
+                renderAttendanceTable();
             }
         }
+    } catch (error) {
+        console.log("يعمل على الذاكرة المحلية (لا يوجد اتصال سحابي حالياً)");
+    }
+}
 
         async function clearRecordsInDB() {
             attendanceList = [];
