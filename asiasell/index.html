@@ -377,18 +377,33 @@
     }
 }
 
-        async function clearRecordsInDB() {
-            attendanceList = [];
-            localStorage.removeItem('asas_attendance_list');
-            renderAttendanceTable();
-            
-            try {
-                await fetch(API_URL, { method: 'DELETE' });
-                showToast('تم تصفير جميع السجلات السحابية والمحلية!', 'success');
-            } catch (error) {
-                showToast('تم تصفير السجلات المحلية بنجاح!', 'success');
-            }
+       async function clearRecordsInDB() {
+    attendanceList = [];
+    localStorage.removeItem('asas_attendance_list');
+    renderAttendanceTable();
+    
+    try {
+        // إنشاء مؤقت زمني (AbortController) لمنع صفن التطبيق إذا السيرفر تأخر
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 ثواني حد أقصى
+
+        const response = await fetch(API_URL, { 
+            method: 'DELETE',
+            signal: controller.signal 
+        });
+        
+        clearTimeout(timeoutId); // إيقاف المؤقت إذا وصل الرد
+
+        if (response.ok) {
+            showToast('تم تصفير جميع السجلات السحابية والمحلية!', 'success');
+        } else {
+            showToast('تم تصفير السجلات المحلية بنجاح (السيرفر لم يستجب)', 'info');
         }
+    } catch (error) {
+        // إذا انقطع النت أو انتهت الـ 5 ثواني، سيتم الحفظ محلياً فوراً بدون ما يصفن التطبيق
+        showToast('تم تصفير السجلات المحلية بنجاح!', 'success');
+    }
+}
 
         // --- 4. التنقل والمصادقة ---
         function switchTab(tab) {
