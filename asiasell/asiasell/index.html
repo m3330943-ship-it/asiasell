@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام حضور طلبة Asas - أسياسيل</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- مكتبات الباركود -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+        body { font-family: 'Tajawal', sans-serif; background-color: #f9fafb; }
+        .asiacell-red { background-color: #d32f2f; }
+        .asiacell-red-text { color: #d32f2f; }
+        
+        /* شريط التمرير */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #d32f2f; }
+
+        /* حركات التمرير والظهور */
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* الإشعارات (Toasts) */
+        #toast-container {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 99999; display: flex; flex-direction: column; gap: 10px;
+            pointer-events: none; width: 90%; max-width: 400px;
+        }
+        .toast {
+            background: white; border-radius: 12px; padding: 12px 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; align-items: center;
+            gap: 12px; font-weight: 600; font-size: 0.9rem;
+            animation: slideUp 0.3s ease-out forwards; border-right: 4px solid #d32f2f;
+        }
+        .toast.success { border-right-color: #16a34a; }
+        .toast.info { border-right-color: #2563eb; }
+        .toast.error { border-right-color: #dc2626; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .toast-hide { animation: fadeOut 0.3s ease-in forwards; }
+        @keyframes fadeOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(10px); } }
+
+        /* شريط تمرير الزوم للكاميرا */
+        input[type=range] {
+            -webkit-appearance: none; width: 100%; background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 20px; width: 20px;
+            border-radius: 50%; background: #d32f2f; cursor: pointer;
+            margin-top: -8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 6px; cursor: pointer;
+            background: #e5e7eb; border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- حاوية الإشعارات -->
+    <div id="toast-container"></div>
+
+    <header class="bg-white shadow-md border-b-2 border-red-600 sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleSidebar()" class="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <img src="https://www.asiacell.com/resources/images/asiacell/sp-asiacell-logo-23-box.jpg" 
+                     onerror="this.onerror=null; this.src='https://placehold.co/100x50/d32f2f/ffffff?text=Asiacell'" 
+                     alt="Asiacell Logo" class="h-10 rounded shadow-sm">
+                <h1 class="text-lg md:text-xl font-bold text-gray-800 hidden sm:block">نظام الحضور <span class="asiacell-red-text">Asas</span></h1>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="navStudentBtn" onclick="switchTab('student')" class="hidden px-3 py-1.5 rounded-lg text-sm font-bold border border-red-600 text-red-600 hover:bg-red-50 transition">
+                    <i class="fa-solid fa-user-graduate ml-1"></i> بوابتي
+                </button>
+                <button onclick="openAdminPinModal()" class="px-3 py-1.5 rounded-lg text-sm font-bold bg-gray-800 text-white hover:bg-gray-900 shadow transition">
+                    <i class="fa-solid fa-user-shield ml-1"></i> الإدارة
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- القائمة الجانبية المنسدلة -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden backdrop-blur-sm transition-opacity"></div>
+    <aside id="sidebar" class="fixed top-0 right-0 w-72 h-full bg-white z-50 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+        <div>
+            <div class="p-5 border-b flex justify-between items-center bg-red-600 text-white">
+                <div class="flex items-center gap-2"><i class="fa-solid fa-graduation-cap text-2xl"></i><span class="font-bold text-lg">قائمة Asas</span></div>
+                <button onclick="toggleSidebar()" class="hover:text-gray-200"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <nav class="p-4 space-y-2">
+                <button onclick="switchTab('auth'); toggleSidebar();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 text-gray-700 font-medium transition"><i class="fa-solid fa-right-to-bracket text-red-600"></i> تسجيل الدخول</button>
+                <button onclick="switchTab('student'); toggleSidebar();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 text-gray-700 font-medium transition"><i class="fa-solid fa-user-graduate text-red-600"></i> بوابتي</button>
+                <button onclick="openAdminPinModal(); toggleSidebar();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 text-gray-700 font-medium transition"><i class="fa-solid fa-building-columns text-red-600"></i> الإدارة</button>
+            </nav>
+        </div>
+    </aside>
+
+    <main class="flex-1 max-w-5xl w-full mx-auto p-4 md:p-6 fade-in">
+        
+        <!-- قسم المصادقة وتسجيل الدخول -->
+        <section id="authSection" class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden max-w-md mx-auto">
+            <div class="bg-gradient-to-r from-red-600 to-red-800 p-8 text-white text-center">
+                <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-md">
+                    <i class="fa-solid fa-user-lock text-3xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold">بوابة Asas</h2>
+            </div>
+            <div class="flex border-b">
+                <button id="tabRegisterBtn" onclick="toggleAuthMode('register')" class="w-1/2 py-3.5 text-center font-bold border-b-2 border-red-600 text-red-600 bg-red-50/50">حساب جديد</button>
+                <button id="tabLoginBtn" onclick="toggleAuthMode('login')" class="w-1/2 py-3.5 text-center font-bold text-gray-500 hover:text-gray-700 transition">دخول</button>
+            </div>
+            <div class="p-6">
+                <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-4">
+                    <input type="text" id="regName" required placeholder="الاسم الثلاثي" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none transition bg-gray-50 focus:bg-white">
+                    <input type="number" id="regBadge" required placeholder="رقم الباج" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none transition bg-gray-50 focus:bg-white">
+                    <select id="regUni" class="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none bg-gray-50">
+                        <option>الكلية التقنية كركوك</option>
+                        <option>جامعة كركوك</option>
+                        <option>جامعة موصل </option>
+                        <option>جامعة ديالى</option>
+                        <option>جامعة بغداد</option>
+                    </select>
+                    <select id="regDept" class="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none bg-gray-50">
+                        <option>هندسة تقنيات الحاسوب</option>
+                        <option>تكنولوجيا المعلومات IT</option>
+                        <option>برمجيات </option>
+                        <option>شبكات واتصالات </option>
+                        <option>امن سيبراني </option>
+                        <option>ذكاء اصطناعي </option>
+                        <option> علوم الحاسوب</option>
+                        <option> الالكترونيك</option>
+                    </select>
+                    <button type="submit" class="w-full py-3.5 mt-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-200 transition transform active:scale-95">إنشاء وحفظ <i class="fa-solid fa-arrow-left mr-2"></i></button>
+                </form>
+                <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4 hidden">
+                    <input type="number" id="loginBadge" required placeholder="رقم الباج" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none transition bg-gray-50 focus:bg-white">
+                    <button type="submit" class="w-full py-3.5 mt-2 bg-gray-800 hover:bg-gray-900 text-white font-bold rounded-xl shadow-lg transition transform active:scale-95">دخول <i class="fa-solid fa-right-to-bracket mr-2"></i></button>
+                </form>
+            </div>
+        </section>
+
+        <!-- قسم الطالب -->
+        <section id="studentSection" class="hidden space-y-6 fade-in">
+            <div class="bg-gradient-to-l from-red-600 to-red-800 p-6 rounded-3xl shadow-lg text-white flex flex-col md:flex-row justify-between items-center gap-4 relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 opacity-10"><i class="fa-solid fa-id-card text-9xl"></i></div>
+                <div class="z-10 text-center md:text-right">
+                    <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm">بوابة الطالب</span>
+                    <h2 id="stCardName" class="text-2xl font-bold mt-2">---</h2>
+                    <p class="text-red-100 text-sm mt-1">الباج: <span id="stCardBadge" class="font-bold">---</span> | القسم: <span id="stCardDept">---</span></p>
+                </div>
+                <button onclick="handleLogout()" class="z-10 px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/30 rounded-xl text-sm font-bold backdrop-blur-sm transition">
+                    خروج <i class="fa-solid fa-power-off mr-1"></i>
+                </button>
+            </div>
+
+            <div class="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 text-center">
+                <div class="w-20 h-20 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto text-3xl mb-4 shadow-inner">
+                    <i class="fa-solid fa-camera-retro"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800">تسجيل الحضور اليومي</h3>
+                <p class="text-sm text-gray-500 mt-2 mb-6 max-w-sm mx-auto">سيتم فتح الكاميرا لمسح الباركود، يرجى الاستفادة من ميزة التقريب (Zoom) إذا كنت تجلس بعيداً في القاعة.</p>
+                <button onclick="openStudentScanner()" class="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl shadow-lg shadow-red-200 transition transform hover:-translate-y-1 active:scale-95 text-lg w-full md:w-auto">
+                    <i class="fa-solid fa-qrcode ml-2"></i> افتح الكاميرا للتسجيل
+                </button>
+            </div>
+        </section>
+
+        <!-- قسم الإدارة -->
+        <section id="adminSection" class="hidden space-y-6 fade-in">
+            <div class="bg-gray-800 text-white p-6 rounded-3xl shadow-lg flex justify-between items-center relative overflow-hidden">
+                <div class="absolute -right-5 -bottom-5 opacity-10"><i class="fa-solid fa-shield-halved text-8xl"></i></div>
+                <div class="z-10">
+                    <h2 class="text-2xl font-bold">لوحة الإدارة</h2>
+                    <p class="text-gray-400 text-xs mt-1">إعداد الموقع ومراقبة الحضور</p>
+                </div>
+                <button onclick="switchTab('auth')" class="z-10 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-xl text-xs font-bold transition">إغلاق اللوحة</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <!-- إعداد الجلسة والباركود -->
+                <div class="md:col-span-4 bg-white p-6 rounded-3xl shadow-xl border border-gray-100 text-center space-y-4">
+                    <h3 class="font-bold text-gray-800 border-b pb-3"><i class="fa-solid fa-location-crosshairs text-red-600 ml-1"></i> إعداد الجلسة</h3>
+                    <p class="text-xs text-gray-500">حدد الموقع لتوليد باركود اليوم</p>
+                    
+                    <button onclick="setAdminLocation()" class="w-full px-4 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold rounded-xl text-sm transition shadow-sm">
+                        <i class="fa-solid fa-map-pin ml-1"></i> تحديد الموقع الجغرافي للقاعة
+                    </button>
+                    <div id="adminLocStatus" class="text-xs font-medium text-gray-400">بانتظار التحديد...</div>
+                    
+                    <div class="flex justify-center pt-2">
+                        <div id="adminQrDisplay" class="p-3 bg-white border-2 border-dashed border-gray-300 rounded-2xl flex items-center justify-center min-h-[160px] min-w-[160px]">
+                            <span class="text-gray-400 text-xs text-center">اضغط على زر<br>تحديد الموقع<br>ليظهر الباركود</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- جدول الحضور والأدوات -->
+                <div class="md:col-span-8 bg-white p-6 rounded-3xl shadow-xl border border-gray-100 flex flex-col h-full">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-lg text-gray-800">سجل الحضور الحي</h3>
+                        <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold" id="attendanceCount">0 طالب</span>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <button onclick="openManualAddModal()" class="flex-1 px-3 py-2 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 font-bold rounded-xl text-sm transition">
+                            <i class="fa-solid fa-user-plus ml-1"></i> إضافة يدوي
+                        </button>
+                        <button onclick="exportToWord()" class="flex-1 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold rounded-xl text-sm transition">
+                            <i class="fa-solid fa-file-word ml-1"></i> تصدير Word
+                        </button>
+                        <button onclick="resetAttendanceList()" class="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold rounded-xl text-sm transition">
+                            <i class="fa-solid fa-trash-can"></i> مسح السجلات
+                        </button>
+                    </div>
+
+                    <div class="overflow-y-auto flex-1 border border-gray-100 rounded-2xl bg-gray-50/50">
+                        <table class="w-full text-right text-sm">
+                            <thead class="bg-gray-100 text-gray-600 sticky top-0">
+                                <tr>
+                                    <th class="p-3 font-bold rounded-tr-2xl">الطالب</th>
+                                    <th class="p-3 font-bold">الباج</th>
+                                    <th class="p-3 font-bold rounded-tl-2xl text-left">الوقت</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendanceTableBody" class="divide-y divide-gray-100 bg-white">
+                                <!-- يتم إدراج البيانات هنا -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- النوافذ المنبثقة (Modals) -->
+
+    <!-- نافذة مسح الباركود مع التقريب (Zoom) -->
+    <div id="scannerModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col items-center justify-center p-4 backdrop-blur-sm fade-in">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 text-center relative overflow-hidden">
+            <button onclick="closeStudentScanner()" class="absolute top-4 left-4 text-gray-400 hover:text-red-500 text-2xl transition z-10">
+                <i class="fa-solid fa-circle-xmark"></i>
+            </button>
+            <h3 class="text-lg font-bold text-gray-800">وجّه الكاميرا للباركود</h3>
+            
+            <div class="p-1 border-4 border-red-100 rounded-2xl overflow-hidden relative">
+                <div id="reader" class="w-full rounded-xl bg-black min-h-[250px]"></div>
+            </div>
+
+            <!-- حاوية الزوم المخفية افتراضياً وتظهر فقط إذا كان الجهاز يدعمها -->
+            <div id="zoomContainer" class="hidden bg-gray-50 p-3 rounded-xl flex items-center gap-3 border border-gray-200 shadow-inner">
+                <i class="fa-solid fa-magnifying-glass-minus text-gray-500"></i>
+                <input type="range" id="zoomSlider" class="flex-1">
+                <i class="fa-solid fa-magnifying-glass-plus text-gray-500"></i>
+            </div>
+            
+            <p id="scannerStatusText" class="text-sm font-semibold text-gray-600">جاري مسح الباركود...</p>
+        </div>
+    </div>
+
+    <!-- نافذة رمز الإدارة -->
+    <div id="pinModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm fade-in">
+        <div class="bg-white w-full max-w-xs rounded-3xl p-6 space-y-5 text-center shadow-2xl">
+            <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto text-gray-700 text-xl"><i class="fa-solid fa-lock"></i></div>
+            <h3 class="text-lg font-bold text-gray-800">رمز الإدارة</h3>
+            <input type="password" id="adminPinInput" placeholder="••••••••" class="w-full text-center tracking-[0.5em] text-2xl px-4 py-3 rounded-xl border border-gray-200 focus:border-gray-500 focus:ring-2 focus:ring-gray-200 outline-none bg-gray-50">
+            <div class="flex gap-2">
+                <button onclick="verifyAdminPin()" class="flex-1 py-3 bg-gray-800 hover:bg-gray-900 text-white font-bold rounded-xl text-sm transition">دخول</button>
+                <button onclick="closePinModal()" class="py-3 px-5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-sm transition">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة الإضافة اليدوية -->
+    <div id="manualAddModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm fade-in">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-user-plus text-green-600 ml-1"></i> إضافة حضور يدوي</h3>
+                <button onclick="closeManualAddModal()" class="text-gray-400 hover:text-red-500 text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="manualAddForm" onsubmit="addStudentManually(event)" class="space-y-3">
+                <input type="text" id="manualName" required placeholder="اسم الطالب" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 outline-none bg-gray-50">
+                <input type="number" id="manualBadge" required placeholder="رقم الباج" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 outline-none bg-gray-50">
+                <input type="text" id="manualDept" value="هندسة تقنيات الحاسوب" required class="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none bg-gray-50">
+                <button type="submit" class="w-full py-3.5 mt-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg transition">إضافة السجل</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- نافذة التأكيد -->
+    <div id="confirmModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm fade-in">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 space-y-5 text-center shadow-2xl">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto text-red-600 text-3xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h3 class="text-lg font-bold text-gray-800">هل أنت متأكد؟</h3>
+            <p class="text-sm text-gray-500">سيتم مسح جميع سجلات الحضور الخاصة باليوم بشكل نهائي.</p>
+            <div class="flex gap-2">
+                <button onclick="confirmReset()" class="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm transition">نعم، امسح السجلات</button>
+                <button onclick="closeConfirmModal()" class="py-3 px-5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-sm transition">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- السكربت والعمليات البرمجية -->
+    <script>
+        // --- 1. الإشعارات (Toasts) ---
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            let icon = type === 'success' ? '<i class="fa-solid fa-circle-check text-green-600 text-lg"></i>' : 
+                       type === 'error' ? '<i class="fa-solid fa-circle-exclamation text-red-600 text-lg"></i>' : 
+                       '<i class="fa-solid fa-circle-info text-blue-600 text-lg"></i>';
+            toast.innerHTML = `${icon} <span class="text-gray-800">${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('toast-hide');
+                toast.addEventListener('animationend', () => toast.remove());
+            }, 3500);
+        }
+
+        // --- 2. المتغيرات العامة الأساسية ---
+        let currentUser = JSON.parse(localStorage.getItem('asas_current_user')) || null;
+        let adminLocation = JSON.parse(localStorage.getItem('asas_admin_location')) || null;
+        let attendanceList = JSON.parse(localStorage.getItem('asas_attendance_list')) || []; 
+        let html5QrCodeScanner = null;
+        let isScannerRunning = false;
+        
+        // النطاق 500 متر
+        const DEFAULT_LOCATION = { lat: 35.4694, lng: 44.3903, radius: 500 }; 
+        const API_URL = '/.netlify/functions/api';
+
+        function getDailyQRCode() {
+            const today = new Date().toISOString().split('T')[0];
+            return 'ASAS_ATTENDANCE_' + today;
+        }
+
+        window.onload = function() {
+    loadAttendanceFromDB(); 
+    if (adminLocation) {
+        document.getElementById('adminLocStatus').innerHTML = `<span class="text-blue-600 font-bold">✓ تم إعداد موقع القاعة</span>`;
+        // توليد الباركود الذكي أول ما تفتح الصفحة
+        const smartQR = `${getDailyQRCode()}|${adminLocation.lat}|${adminLocation.lng}`;
+        renderAdminQR(smartQR);
+    }
+    if (currentUser) switchTab('student');
+    else switchTab('auth');
+};
+
+        // --- 3. التخاطب مع البيانات (فحص قوي للـ Local Storage والـ API) ---
+        async function loadAttendanceFromDB() {
+            try {
+                const response = await fetch(API_URL);
+                if (response.ok) {
+                    attendanceList = await response.json();
+                    localStorage.setItem('asas_attendance_list', JSON.stringify(attendanceList)); // تحديث الذاكرة المحلية
+                }
+            } catch (error) {
+                // الفشل هنا طبيعي في حال التجربة المحلية بدون سيرفر
+            }
+            renderAttendanceTable(); 
+        }
+
+        async function saveRecordToDB(record) {
+            // الحفظ المحلي أولاً لضمان عدم ضياع البيانات 100%
+            attendanceList.push(record);
+            localStorage.setItem('asas_attendance_list', JSON.stringify(attendanceList));
+            renderAttendanceTable();
+            showToast('تم تسجيل الحضور بنجاح!', 'success');
+
+            // محاولة الحفظ السحابي
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(record)
+                });
+            } catch (error) {
+                console.log("تم الحفظ محلياً (لا يوجد اتصال بالقاعدة السحابية حالياً)");
+            }
+        }
+
+        async function clearRecordsInDB() {
+            attendanceList = [];
+            localStorage.removeItem('asas_attendance_list');
+            renderAttendanceTable();
+            
+            try {
+                await fetch(API_URL, { method: 'DELETE' });
+                showToast('تم تصفير جميع السجلات السحابية والمحلية!', 'success');
+            } catch (error) {
+                showToast('تم تصفير السجلات المحلية بنجاح!', 'success');
+            }
+        }
+
+        // --- 4. التنقل والمصادقة ---
+        function switchTab(tab) {
+    document.getElementById('authSection').classList.add('hidden');
+    document.getElementById('studentSection').classList.add('hidden');
+    document.getElementById('adminSection').classList.add('hidden');
+
+    if (tab === 'auth') {
+        document.getElementById('authSection').classList.remove('hidden');
+    } else if (tab === 'student') {
+        if (!currentUser) { showToast('يرجى تسجيل الدخول أولاً', 'error'); switchTab('auth'); return; }
+        updateStudentUI();
+        document.getElementById('studentSection').classList.remove('hidden');
+        document.getElementById('navStudentBtn').classList.remove('hidden');
+    } else if (tab === 'admin') {
+        document.getElementById('adminSection').classList.remove('hidden');
+        if (adminLocation) {
+            // توليد الباركود الذكي من تدخل لوحة الإدارة
+            const smartQR = `${getDailyQRCode()}|${adminLocation.lat}|${adminLocation.lng}`;
+            renderAdminQR(smartQR);
+        }
+        loadAttendanceFromDB(); 
+    }
+}
+
+        function toggleAuthMode(mode) {
+            const regForm = document.getElementById('registerForm');
+            const loginForm = document.getElementById('loginForm');
+            const regBtn = document.getElementById('tabRegisterBtn');
+            const loginBtn = document.getElementById('tabLoginBtn');
+
+            if (mode === 'register') {
+                regForm.classList.remove('hidden'); loginForm.classList.add('hidden');
+                regBtn.className = "w-1/2 py-3.5 text-center font-bold border-b-2 border-red-600 text-red-600 bg-red-50/50";
+                loginBtn.className = "w-1/2 py-3.5 text-center font-bold text-gray-500 hover:text-gray-700 transition";
+            } else {
+                regForm.classList.add('hidden'); loginForm.classList.remove('hidden');
+                loginBtn.className = "w-1/2 py-3.5 text-center font-bold border-b-2 border-red-600 text-red-600 bg-red-50/50";
+                regBtn.className = "w-1/2 py-3.5 text-center font-bold text-gray-500 hover:text-gray-700 transition";
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('translate-x-full');
+            document.getElementById('sidebarOverlay').classList.toggle('hidden');
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            currentUser = {
+                name: document.getElementById('regName').value,
+                badgeId: document.getElementById('regBadge').value,
+                university: document.getElementById('regUni').value,
+                department: document.getElementById('regDept').value
+            };
+            localStorage.setItem('asas_current_user', JSON.stringify(currentUser));
+            showToast('تم إنشاء الحساب بنجاح', 'success');
+            switchTab('student');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            currentUser = {
+                name: "طالب مسجل", // في التطبيق الحقيقي سيتم جلب الاسم من DB
+                badgeId: document.getElementById('loginBadge').value,
+                university: "الكلية التقنية",
+                department: "الحاسوب"
+            };
+            localStorage.setItem('asas_current_user', JSON.stringify(currentUser));
+            showToast('أهلاً بك مجدداً', 'success');
+            switchTab('student');
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            localStorage.removeItem('asas_current_user');
+            document.getElementById('navStudentBtn').classList.add('hidden');
+            showToast('تم تسجيل الخروج', 'info');
+            switchTab('auth');
+        }
+
+        function updateStudentUI() {
+            document.getElementById('stCardName').innerText = currentUser.name;
+            document.getElementById('stCardDept').innerText = currentUser.department;
+            document.getElementById('stCardBadge').innerText = currentUser.badgeId;
+        }
+
+        // --- 5. الإدارة ---
+        function setAdminLocation() {
+    if (navigator.geolocation) {
+        showToast('جاري استخراج الموقع الدقيق...', 'info');
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                adminLocation = { lat: position.coords.latitude, lng: position.coords.longitude, radius: 500 };
+                localStorage.setItem('asas_admin_location', JSON.stringify(adminLocation));
+                document.getElementById('adminLocStatus').innerHTML = `<span class="text-blue-600 font-bold">✓ تم إعتماد موقعك الجغرافي كمركز حضور</span>`;
+                
+                // هنا السحر: ندمج خط الطول والعرض بداخل صورة الباركود
+                const smartQR = `${getDailyQRCode()}|${position.coords.latitude}|${position.coords.longitude}`;
+                renderAdminQR(smartQR); 
+                
+                showToast('تم تحديد الموقع بنجاح، الباركود جاهز.', 'success');
+            },
+            () => {
+                adminLocation = DEFAULT_LOCATION;
+                localStorage.setItem('asas_admin_location', JSON.stringify(adminLocation));
+                document.getElementById('adminLocStatus').innerHTML = `<span class="text-orange-600 font-bold">⚠️ تم اعتماد الموقع الافتراضي</span>`;
+                
+                const smartQR = `${getDailyQRCode()}|${DEFAULT_LOCATION.lat}|${DEFAULT_LOCATION.lng}`;
+                renderAdminQR(smartQR);
+                showToast('الـ GPS مغلق أو محظور. تم تفعيل الموقع الافتراضي.', 'info');
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    } else {
+        showToast('المتصفح لا يدعم تحديد الموقع!', 'error');
+    }
+}
+
+        function renderAdminQR(code) {
+            const container = document.getElementById('adminQrDisplay');
+            container.innerHTML = '';
+            new QRCode(container, { text: code, width: 140, height: 140, colorDark: "#1f2937" });
+        }
+
+        // --- 6. كاميرا الطالب وإعدادات التقريب (Zoom) ---
+        function setupCameraZoom() {
+            // البحث عن عنصر الفيديو الذي ينشئه html5-qrcode
+            const videoElement = document.querySelector('#reader video');
+            if (videoElement && videoElement.srcObject) {
+                const videoTrack = videoElement.srcObject.getVideoTracks()[0];
+                if (!videoTrack) return;
+                
+                // تأخير بسيط لضمان تهيئة إمكانيات الكاميرا من المتصفح
+                setTimeout(() => {
+                    const capabilities = videoTrack.getCapabilities();
+                    // التحقق مما إذا كان المتصفح/الجهاز يدعم التحكم بالتقريب
+                    if (capabilities.zoom) {
+                        const zoomSlider = document.getElementById('zoomSlider');
+                        const zoomContainer = document.getElementById('zoomContainer');
+                        
+                        // إعداد قيم الـ Slider بناءً على قدرات الكاميرا الفعلية
+                        zoomSlider.min = capabilities.zoom.min;
+                        zoomSlider.max = capabilities.zoom.max;
+                        zoomSlider.step = capabilities.zoom.step;
+                        zoomSlider.value = videoTrack.getSettings().zoom || capabilities.zoom.min;
+                        
+                        // إظهار واجهة التقريب
+                        zoomContainer.classList.remove('hidden');
+                        
+                        // تطبيق التقريب عند تحريك الشريط
+                        zoomSlider.oninput = (e) => {
+                            videoTrack.applyConstraints({ advanced: [{ zoom: parseFloat(e.target.value) }] })
+                                .catch(err => console.log('خطأ في التقريب', err));
+                        };
+                    }
+                }, 500);
+            }
+        }
+
+        function openStudentScanner() {
+    const modal = document.getElementById('scannerModal');
+    const statusText = document.getElementById('scannerStatusText');
+    document.getElementById('zoomContainer').classList.add('hidden'); 
+    
+    modal.classList.remove('hidden');
+    statusText.innerText = "وجّه الكاميرا نحو باركود الإدارة...";
+    statusText.className = "text-sm font-semibold text-gray-600";
+    isScannerRunning = true;
+
+    const expectedBaseQR = getDailyQRCode();
+
+    try {
+        html5QrCodeScanner = new Html5Qrcode("reader");
+        html5QrCodeScanner.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 220, height: 220 } },
+            (decodedText) => {
+                if (!isScannerRunning) return; 
+                
+                // التأكد أن الباركود يبدأ برمز اليوم الصحيح
+                if (decodedText.startsWith(expectedBaseQR)) {
+                    isScannerRunning = false; 
+                    html5QrCodeScanner.stop().then(() => {
+                        statusText.innerText = "✅ تمت القراءة! جاري فحص الـ GPS بدقة...";
+                        statusText.className = "text-sm font-bold text-green-600";
+                        
+                        // استخراج موقع اللابتوب من الباركود اللي قرأه الموبايل
+                        const parts = decodedText.split('|');
+                        let targetLoc = DEFAULT_LOCATION;
+                        
+                        // إذا الباركود بي 3 أجزاء (الرمز | خط الطول | خط العرض)
+                        if(parts.length === 3) {
+                            targetLoc = { lat: parseFloat(parts[1]), lng: parseFloat(parts[2]), radius: 500 };
+                        }
+                        
+                        // إرسال موقع اللابتوب لدالة التحقق حتى تقيس المسافة بينه وبين الموبايل
+                        verifyStudentLocation(targetLoc);
+                    });
+                } else {
+                    statusText.innerText = "❌ الباركود لا يطابق جلسة اليوم!";
+                    statusText.className = "text-sm font-bold text-red-600";
+                }
+            },
+            (error) => {} 
+        ).then(() => {
+            setupCameraZoom();
+        }).catch((err) => {
+            isScannerRunning = false;
+            showToast('يجب إعطاء صلاحية الكاميرا للمتصفح!', 'error');
+            closeStudentScanner();
+        });
+    } catch (e) {
+        isScannerRunning = false;
+        closeStudentScanner();
+    }
+}
+
+        function closeStudentScanner() {
+            isScannerRunning = false;
+            if (html5QrCodeScanner) {
+                html5QrCodeScanner.stop().then(() => {
+                    document.getElementById('scannerModal').classList.add('hidden');
+                    html5QrCodeScanner.clear();
+                }).catch(() => {
+                    document.getElementById('scannerModal').classList.add('hidden');
+                });
+            } else {
+                document.getElementById('scannerModal').classList.add('hidden');
+            }
+        }
+
+        function verifyStudentLocation() {
+            const targetLoc = adminLocation || DEFAULT_LOCATION;
+            
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const distance = getDistanceInMeters(pos.coords.latitude, pos.coords.longitude, targetLoc.lat, targetLoc.lng);
+                    if (distance > targetLoc.radius) {
+                        showToast(`أنت بعيد عن القاعة بمسافة ${Math.round(distance)} متر!`, 'error');
+                        setTimeout(closeStudentScanner, 2000);
+                    } else {
+                        recordAttendance('مؤكد (GPS)');
+                        setTimeout(closeStudentScanner, 1000);
+                    }
+                },
+                (error) => {
+                    showToast('الرجاء تفعيل (الموقع - Location) للتحقق من تواجدك!', 'error');
+                    setTimeout(closeStudentScanner, 2000);
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            );
+        }
+
+        // --- 7. عمليات الواجهة والحضور اليدوي ---
+        function recordAttendance(status) {
+            if (attendanceList.some(s => s.badgeId === currentUser.badgeId)) {
+                showToast('أنت مسجل في قائمة اليوم مسبقاً!', 'error'); return;
+            }
+            const record = {
+                name: currentUser.name,
+                badgeId: currentUser.badgeId,
+                department: currentUser.department,
+                time: new Date().toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' }),
+                status: status
+            };
+            saveRecordToDB(record);
+        }
+
+        function renderAttendanceTable() {
+            const tbody = document.getElementById('attendanceTableBody');
+            document.getElementById('attendanceCount').innerText = `${attendanceList.length} طالب`;
+            tbody.innerHTML = '';
+            
+            if (attendanceList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-gray-400 font-medium">الجدول فارغ حالياً</td></tr>`;
+                return;
+            }
+            
+            attendanceList.forEach((item) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-red-50/50 transition border-b border-gray-100";
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <div class="font-bold text-gray-800">${item.name}</div>
+                        <div class="text-[10px] text-gray-400">${item.status}</div>
+                    </td>
+                    <td class="p-3 text-gray-600 font-mono text-sm">${item.badgeId}</td>
+                    <td class="p-3 text-red-600 font-bold text-xs text-left" dir="ltr">${item.time}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openManualAddModal() { document.getElementById('manualAddModal').classList.remove('hidden'); }
+        function closeManualAddModal() { document.getElementById('manualAddModal').classList.add('hidden'); document.getElementById('manualAddForm').reset(); }
+
+        function addStudentManually(e) {
+            e.preventDefault();
+            const badgeId = document.getElementById('manualBadge').value;
+            if (attendanceList.some(s => s.badgeId === badgeId)) {
+                showToast('هذا الطالب مسجل بالفعل!', 'error'); return;
+            }
+            const record = {
+                name: document.getElementById('manualName').value,
+                badgeId: badgeId,
+                department: document.getElementById('manualDept').value,
+                time: new Date().toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' }),
+                status: 'إضافة يدوية (إدارة)'
+            };
+            saveRecordToDB(record);
+            closeManualAddModal();
+        }
+
+        function resetAttendanceList() { document.getElementById('confirmModal').classList.remove('hidden'); }
+        function closeConfirmModal() { document.getElementById('confirmModal').classList.add('hidden'); }
+        function confirmReset() { clearRecordsInDB(); closeConfirmModal(); }
+
+        function exportToWord() {
+            if(attendanceList.length === 0) { showToast('الجدول فارغ للطباعة!', 'error'); return; }
+            let rows = attendanceList.map((i, idx) => `<tr><td style="padding:5px;">${idx+1}</td><td style="padding:5px;">${i.name}</td><td style="padding:5px;">${i.badgeId}</td><td style="padding:5px;">${i.time}</td></tr>`).join('');
+            let html = `<html dir="rtl"><head><meta charset="utf-8"></head><body style="font-family: Arial; text-align: right;">
+                <h2 style="color: #d32f2f; text-align:center;">سجل حضور طلبة Asas</h2>
+                <table border="1" style="border-collapse:collapse;width:100%;text-align:center;">
+                <tr style="background:#eee;"><th>#</th><th>الاسم</th><th>رقم الباج</th><th>وقت الحضور</th></tr>${rows}</table></body></html>`;
+            const blob = new Blob(['\ufeff' + html], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = 'attendance.doc';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            showToast('تم تحميل ملف Word بنجاح', 'success');
+        }
+
+        function openAdminPinModal() { document.getElementById('pinModal').classList.remove('hidden'); }
+        function closePinModal() { document.getElementById('pinModal').classList.add('hidden'); }
+        function verifyAdminPin() {
+            if (document.getElementById('adminPinInput').value === '11111999') {
+                closePinModal(); switchTab('admin');
+                document.getElementById('adminPinInput').value = '';
+                showToast('تم تسجيل دخول الإدارة', 'success');
+            } else {
+                showToast('رمز الدخول خاطئ!', 'error');
+            }
+        }
+
+        // المعادلة الرياضية لاحتساب المسافة بين نقطتين جغرافيتين
+        function getDistanceInMeters(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; const φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180, Δλ = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+        }
+    </script>
+</body>
+</html>
