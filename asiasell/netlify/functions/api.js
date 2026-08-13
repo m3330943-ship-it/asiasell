@@ -1,7 +1,7 @@
 const { MongoClient } = require('mongodb');
 
-// هذا السطر يسحب الرابط السري من إعدادات Netlify (للحماية)
-const uri = process.env.MONGODB_URI; 
+// الرابط السحري جاهز ومربوط بقاعدة البيانات مالتك
+const uri = "mongodb+srv://mohammed:mohammed12345@cluster222.k3a1zlp.mongodb.net/attendance_db?retryWrites=true&w=majority&appName=Cluster222"; 
 const client = new MongoClient(uri);
 
 exports.handler = async (event) => {
