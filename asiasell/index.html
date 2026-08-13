@@ -353,34 +353,29 @@
 
        // --- 3. التخاطب السحابي الآمن والسريع (بدون تجميد) ---
 async function loadAttendanceFromDB() {
-    // 1. عرض البيانات المحلية فورا لضمان عدم توقف الواجهة
+    // 1. قراءة البيانات من الذاكرة المحلية وعرضها فوراً لضمان ظهورها
     let localData = JSON.parse(localStorage.getItem('asas_attendance_list')) || [];
     if (localData.length > 0) {
         attendanceList = localData;
         renderAttendanceTable();
     }
 
-    // 2. محاولة جلب أحدث السجلات من السيرفر بالخلفية مع مؤقت 4 ثواني لمنع الصفنة
+    // 2. محاولة جلب البيانات من السيرفر بالخلفية (بدون مسح البيانات المحلية إذا كان السيرفر فارغاً)
     try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 4000);
-
-        const response = await fetch(API_URL, { signal: controller.signal });
-        clearTimeout(timeoutId);
-
+        const response = await fetch(API_URL);
         if (response.ok) {
             const serverData = await response.json();
-            if (serverData && Array.isArray(serverData)) {
+            // نعتمد بيانات السيرفر فقط إذا كانت تحتوي على سجلات فعلية وليست فارغة
+            if (serverData && Array.isArray(serverData) && serverData.length > 0) {
                 attendanceList = serverData;
                 localStorage.setItem('asas_attendance_list', JSON.stringify(attendanceList));
                 renderAttendanceTable();
             }
         }
     } catch (error) {
-        console.log("يعمل على الذاكرة المؤقتة (السيرفر غير متصل حالياً)");
+        console.log("يعمل على الذاكرة المحلية حالياً");
     }
 }
-
 async function saveRecordToDB(record) {
     // التحقق من عدم التكرار
     if (attendanceList.some(s => s.badgeId === record.badgeId)) {
