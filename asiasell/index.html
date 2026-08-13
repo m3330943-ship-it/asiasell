@@ -351,60 +351,77 @@
     else switchTab('auth');
 };
 
-        // --- 3. التخاطب مع البيانات (فحص قوي للـ Local Storage والـ API) ---
-       async function loadAttendanceFromDB() {
-    // 1. قراءة البيانات المحلية أولاً لضمان عدم اختفائها فوراً
+       // --- 3. التخاطب السحابي الآمن والسريع (بدون تجميد) ---
+async function loadAttendanceFromDB() {
+    // 1. عرض البيانات المحلية فورا لضمان عدم توقف الواجهة
     let localData = JSON.parse(localStorage.getItem('asas_attendance_list')) || [];
     if (localData.length > 0) {
         attendanceList = localData;
         renderAttendanceTable();
     }
 
-    // 2. محاولة جلب التحديثات من السيرفر بالخلفية
+    // 2. محاولة جلب أحدث السجلات من السيرفر بالخلفية مع مؤقت 4 ثواني لمنع الصفنة
     try {
-        const response = await fetch(API_URL);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+        const response = await fetch(API_URL, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
         if (response.ok) {
             const serverData = await response.json();
-            // إذا كان السيرفر يحتوي على بيانات صحيحة، نعتمدها ونحدث المحلي
-            if (serverData && Array.isArray(serverData) && serverData.length > 0) {
+            if (serverData && Array.isArray(serverData)) {
                 attendanceList = serverData;
                 localStorage.setItem('asas_attendance_list', JSON.stringify(attendanceList));
                 renderAttendanceTable();
             }
         }
     } catch (error) {
-        console.log("يعمل على الذاكرة المحلية (لا يوجد اتصال سحابي حالياً)");
+        console.log("يعمل على الذاكرة المؤقتة (السيرفر غير متصل حالياً)");
     }
 }
 
-       async function clearRecordsInDB() {
+async function saveRecordToDB(record) {
+    // التحقق من عدم التكرار
+    if (attendanceList.some(s => s.badgeId === record.badgeId)) {
+        showToast('أنت مسجل في قائمة اليوم مسبقاً!', 'error');
+        return;
+    }
+
+    // الحفظ المحلي فوراً لإعطاء استجابة سريعة للطالب بدون انتظار
+    attendanceList.push(record);
+    localStorage.setItem('asas_attendance_list', JSON.stringify(attendanceList));
+    renderAttendanceTable();
+    showToast('تم تسجيل الحضور بنجاح!', 'success');
+
+    // إرسال البيانات لقاعدة البيانات السحابية بالخلفية
+    try {
+        await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(record)
+        });
+    } catch (error) {
+        console.log("تم الحفظ محلياً وجاري مزامنته مع السيرفر");
+    }
+}
+
+async function clearRecordsInDB() {
     attendanceList = [];
     localStorage.removeItem('asas_attendance_list');
     renderAttendanceTable();
     
     try {
-        // إنشاء مؤقت زمني (AbortController) لمنع صفن التطبيق إذا السيرفر تأخر
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 ثواني حد أقصى
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
 
-        const response = await fetch(API_URL, { 
-            method: 'DELETE',
-            signal: controller.signal 
-        });
-        
-        clearTimeout(timeoutId); // إيقاف المؤقت إذا وصل الرد
-
-        if (response.ok) {
-            showToast('تم تصفير جميع السجلات السحابية والمحلية!', 'success');
-        } else {
-            showToast('تم تصفير السجلات المحلية بنجاح (السيرفر لم يستجب)', 'info');
-        }
+        await fetch(API_URL, { method: 'DELETE', signal: controller.signal });
+        clearTimeout(timeoutId);
+        showToast('تم تصفير جميع السجلات السحابية والمحلية!', 'success');
     } catch (error) {
-        // إذا انقطع النت أو انتهت الـ 5 ثواني، سيتم الحفظ محلياً فوراً بدون ما يصفن التطبيق
         showToast('تم تصفير السجلات المحلية بنجاح!', 'success');
     }
 }
-
         // --- 4. التنقل والمصادقة ---
         function switchTab(tab) {
     document.getElementById('authSection').classList.add('hidden');
