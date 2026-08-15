@@ -56,6 +56,55 @@
             width: 100%; height: 6px; cursor: pointer;
             background: #e5e7eb; border-radius: 3px;
         }
+
+        /* تنسيقات الفوتر (أسفل الموقع) وتأثيرات السوشيال ميديا */
+        .site-footer {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            padding: 25px 0;
+            text-align: center;
+            border-top: 4px solid #d32f2f;
+            width: 100%;
+        }
+        .footer-content p {
+            margin: 0 0 15px 0;
+            font-size: 15px;
+            color: #cccccc;
+            font-weight: 500;
+        }
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .social-icon {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 42px;
+            height: 42px;
+            background-color: #333333;
+            color: #ffffff;
+            border-radius: 50%;
+            text-decoration: none;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+        .social-icon.facebook:hover { 
+            background-color: #1877F2; 
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(24, 119, 242, 0.4);
+        }
+        .social-icon.instagram:hover { 
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); 
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(220, 39, 67, 0.4);
+        }
+        .social-icon.whatsapp:hover { 
+            background-color: #25D366; 
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.4);
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -97,11 +146,17 @@
                 <button onclick="switchTab('auth'); toggleSidebar();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 text-gray-700 font-medium transition"><i class="fa-solid fa-right-to-bracket text-red-600"></i> تسجيل الدخول</button>
                 <button onclick="switchTab('student'); toggleSidebar();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 text-gray-700 font-medium transition"><i class="fa-solid fa-user-graduate text-red-600"></i> بوابتي</button>
                 <button onclick="openAdminPinModal(); toggleSidebar();" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 text-gray-700 font-medium transition"><i class="fa-solid fa-building-columns text-red-600"></i> الإدارة</button>
+                
+                <hr class="border-gray-200 my-3">
+                
+                <a href="https://www.asiacell.com/about/asas" target="_blank" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 text-red-600 font-bold transition">
+                    <i class="fa-solid fa-circle-info text-red-600"></i> عن آسياسيل
+                </a>
             </nav>
         </div>
     </aside>
 
-    <main class="flex-1 max-w-5xl w-full mx-auto p-4 md:p-6 fade-in">
+    <main class="flex-1 max-w-5xl w-full mx-auto p-4 md:p-6 fade-in mb-8">
         
         <!-- قسم المصادقة وتسجيل الدخول -->
         <section id="authSection" class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden max-w-md mx-auto">
@@ -164,7 +219,7 @@
                     <i class="fa-solid fa-camera-retro"></i>
                 </div>
                 <h3 class="text-xl font-bold text-gray-800">تسجيل الحضور اليومي</h3>
-                <p class="text-sm text-gray-500 mt-2 mb-6 max-w-sm mx-auto">سيتم فتح الكاميرا لمسح الباركود، يرجى الاستفادة من ميزة التقريب (Zoom) إذا كنت تجلس بعيداً في القاعة.</p>
+                <p class="text-sm text-gray-500 mt-2 mb-6 max-w-sm mx-auto">سيتم فتح الكاميرا لمسح الباركود، يرجى الاستفادة من ميزة التقريب (Zoom) أو إرفاق صورة إذا كنت تجلس بعيداً.</p>
                 <button onclick="openStudentScanner()" class="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl shadow-lg shadow-red-200 transition transform hover:-translate-y-1 active:scale-95 text-lg w-full md:w-auto">
                     <i class="fa-solid fa-qrcode ml-2"></i> افتح الكاميرا للتسجيل
                 </button>
@@ -238,9 +293,27 @@
         </section>
     </main>
 
+    <!-- الفوتر -->
+    <footer class="site-footer mt-auto">
+        <div class="footer-content">
+            <p>نظام الحضور الذكي &copy; 2026 - آسياسيل</p>
+            <div class="social-links">
+                <a href="https://www.facebook.com/Asiacell" target="_blank" class="social-icon facebook" title="فيسبوك">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="https://www.instagram.com/asiacellconnect/" target="_blank" class="social-icon instagram" title="انستغرام">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="https://wa.me/9647701111111" target="_blank" class="social-icon whatsapp" title="واتساب">
+                    <i class="fab fa-whatsapp"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
     <!-- النوافذ المنبثقة (Modals) -->
 
-    <!-- نافذة مسح الباركود مع التقريب (Zoom) -->
+    <!-- نافذة مسح الباركود مع ميزة الصورة من الكاميرا الأصلية -->
     <div id="scannerModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col items-center justify-center p-4 backdrop-blur-sm fade-in">
         <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 text-center relative overflow-hidden">
             <button onclick="closeStudentScanner()" class="absolute top-4 left-4 text-gray-400 hover:text-red-500 text-2xl transition z-10">
@@ -252,7 +325,6 @@
                 <div id="reader" class="w-full rounded-xl bg-black min-h-[250px]"></div>
             </div>
 
-            <!-- حاوية الزوم المخفية افتراضياً وتظهر فقط إذا كان الجهاز يدعمها -->
             <div id="zoomContainer" class="hidden bg-gray-50 p-3 rounded-xl flex items-center gap-3 border border-gray-200 shadow-inner">
                 <i class="fa-solid fa-magnifying-glass-minus text-gray-500"></i>
                 <input type="range" id="zoomSlider" class="flex-1">
@@ -260,6 +332,15 @@
             </div>
             
             <p id="scannerStatusText" class="text-sm font-semibold text-gray-600">جاري مسح الباركود...</p>
+
+            <!-- الميزة الجديدة: زر تصوير الباركود بالكاميرا الأصلية -->
+            <div class="mt-2 border-t border-gray-100 pt-4">
+                <p class="text-xs text-gray-400 mb-2">هل تجلس بعيداً؟ استخدم زوم الكاميرا الأصلية</p>
+                <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" class="hidden" onchange="scanNativeImage(event)">
+                <button onclick="document.getElementById('nativeCameraInput').click()" class="w-full py-2.5 bg-gray-800 hover:bg-gray-900 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-camera"></i> التقاط صورة للباركود
+                </button>
+            </div>
         </div>
     </div>
 
@@ -330,7 +411,6 @@
         let html5QrCodeScanner = null;
         let isScannerRunning = false;
         
-        // النطاق 500 متر
         const DEFAULT_LOCATION = { lat: 35.4694, lng: 44.3903, radius: 500 }; 
         const API_URL = '/.netlify/functions/api';
 
@@ -340,106 +420,94 @@
         }
 
         window.onload = function() {
-    loadAttendanceFromDB(); 
-    if (adminLocation) {
-        document.getElementById('adminLocStatus').innerHTML = `<span class="text-blue-600 font-bold">✓ تم إعداد موقع القاعة</span>`;
-        // توليد الباركود الذكي أول ما تفتح الصفحة
-        const smartQR = `${getDailyQRCode()}|${adminLocation.lat}|${adminLocation.lng}`;
-        renderAdminQR(smartQR);
-    }
-    if (currentUser) switchTab('student');
-    else switchTab('auth');
-};
+            loadAttendanceFromDB(); 
+            if (adminLocation) {
+                document.getElementById('adminLocStatus').innerHTML = `<span class="text-blue-600 font-bold">✓ تم إعداد موقع القاعة</span>`;
+                const smartQR = `${getDailyQRCode()}|${adminLocation.lat}|${adminLocation.lng}`;
+                renderAdminQR(smartQR);
+            }
+            if (currentUser) switchTab('student');
+            else switchTab('auth');
+        };
 
-       // --- 3. التخاطب السحابي الآمن والسريع (بدون تجميد) ---
-async function loadAttendanceFromDB() {
-    // 1. قراءة البيانات من الذاكرة المحلية وعرضها فوراً لضمان ظهورها
-    let localData = JSON.parse(localStorage.getItem('asas_attendance_list')) || [];
-    if (localData.length > 0) {
-        attendanceList = localData;
-        renderAttendanceTable();
-    }
-
-    // 2. محاولة جلب البيانات من السيرفر بالخلفية (بدون مسح البيانات المحلية إذا كان السيرفر فارغاً)
-    try {
-        const response = await fetch(API_URL);
-        if (response.ok) {
-            const serverData = await response.json();
-            // نعتمد بيانات السيرفر فقط إذا كانت تحتوي على سجلات فعلية وليست فارغة
-            if (serverData && Array.isArray(serverData) && serverData.length > 0) {
-                attendanceList = serverData;
-                localStorage.setItem('asas_attendance_list', JSON.stringify(attendanceList));
+       // --- 3. التخاطب السحابي ---
+        async function loadAttendanceFromDB() {
+            let localData = JSON.parse(localStorage.getItem('asas_attendance_list')) || [];
+            if (localData.length > 0) {
+                attendanceList = localData;
                 renderAttendanceTable();
             }
+            try {
+                const response = await fetch(API_URL);
+                if (response.ok) {
+                    const serverData = await response.json();
+                    if (serverData && Array.isArray(serverData) && serverData.length > 0) {
+                        attendanceList = serverData;
+                        localStorage.setItem('asas_attendance_list', JSON.stringify(attendanceList));
+                        renderAttendanceTable();
+                    }
+                }
+            } catch (error) {
+                console.log("يعمل على الذاكرة المحلية حالياً");
+            }
         }
-    } catch (error) {
-        console.log("يعمل على الذاكرة المحلية حالياً");
-    }
-}
-async function saveRecordToDB(record) {
-    // التحقق من عدم التكرار
-    if (attendanceList.some(s => s.badgeId === record.badgeId)) {
-        showToast('أنت مسجل في قائمة اليوم مسبقاً!', 'error');
-        return;
-    }
 
-    // الحفظ المحلي فوراً لإعطاء استجابة سريعة للطالب بدون انتظار
-    attendanceList.push(record);
-    localStorage.setItem('asas_attendance_list', JSON.stringify(attendanceList));
-    renderAttendanceTable();
-    showToast('تم تسجيل الحضور بنجاح!', 'success');
+        async function saveRecordToDB(record) {
+            if (attendanceList.some(s => s.badgeId === record.badgeId)) {
+                showToast('أنت مسجل في قائمة اليوم مسبقاً!', 'error');
+                return;
+            }
+            attendanceList.push(record);
+            localStorage.setItem('asas_attendance_list', JSON.stringify(attendanceList));
+            renderAttendanceTable();
+            showToast('تم تسجيل الحضور بنجاح!', 'success');
 
-    // إرسال البيانات لقاعدة البيانات السحابية بالخلفية
-    try {
-        await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(record)
-        });
-    } catch (error) {
-        console.log("تم الحفظ محلياً وجاري مزامنته مع السيرفر");
-    }
-}
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(record)
+                });
+            } catch (error) {}
+        }
 
-async function clearRecordsInDB() {
-    attendanceList = [];
-    localStorage.removeItem('asas_attendance_list');
-    renderAttendanceTable();
-    
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        async function clearRecordsInDB() {
+            attendanceList = [];
+            localStorage.removeItem('asas_attendance_list');
+            renderAttendanceTable();
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
+                await fetch(API_URL, { method: 'DELETE', signal: controller.signal });
+                clearTimeout(timeoutId);
+                showToast('تم تصفير جميع السجلات السحابية والمحلية!', 'success');
+            } catch (error) {
+                showToast('تم تصفير السجلات المحلية بنجاح!', 'success');
+            }
+        }
 
-        await fetch(API_URL, { method: 'DELETE', signal: controller.signal });
-        clearTimeout(timeoutId);
-        showToast('تم تصفير جميع السجلات السحابية والمحلية!', 'success');
-    } catch (error) {
-        showToast('تم تصفير السجلات المحلية بنجاح!', 'success');
-    }
-}
         // --- 4. التنقل والمصادقة ---
         function switchTab(tab) {
-    document.getElementById('authSection').classList.add('hidden');
-    document.getElementById('studentSection').classList.add('hidden');
-    document.getElementById('adminSection').classList.add('hidden');
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('studentSection').classList.add('hidden');
+            document.getElementById('adminSection').classList.add('hidden');
 
-    if (tab === 'auth') {
-        document.getElementById('authSection').classList.remove('hidden');
-    } else if (tab === 'student') {
-        if (!currentUser) { showToast('يرجى تسجيل الدخول أولاً', 'error'); switchTab('auth'); return; }
-        updateStudentUI();
-        document.getElementById('studentSection').classList.remove('hidden');
-        document.getElementById('navStudentBtn').classList.remove('hidden');
-    } else if (tab === 'admin') {
-        document.getElementById('adminSection').classList.remove('hidden');
-        if (adminLocation) {
-            // توليد الباركود الذكي من تدخل لوحة الإدارة
-            const smartQR = `${getDailyQRCode()}|${adminLocation.lat}|${adminLocation.lng}`;
-            renderAdminQR(smartQR);
+            if (tab === 'auth') {
+                document.getElementById('authSection').classList.remove('hidden');
+            } else if (tab === 'student') {
+                if (!currentUser) { showToast('يرجى تسجيل الدخول أولاً', 'error'); switchTab('auth'); return; }
+                updateStudentUI();
+                document.getElementById('studentSection').classList.remove('hidden');
+                document.getElementById('navStudentBtn').classList.remove('hidden');
+            } else if (tab === 'admin') {
+                document.getElementById('adminSection').classList.remove('hidden');
+                if (adminLocation) {
+                    const smartQR = `${getDailyQRCode()}|${adminLocation.lat}|${adminLocation.lng}`;
+                    renderAdminQR(smartQR);
+                }
+                loadAttendanceFromDB(); 
+            }
         }
-        loadAttendanceFromDB(); 
-    }
-}
 
         function toggleAuthMode(mode) {
             const regForm = document.getElementById('registerForm');
@@ -479,7 +547,7 @@ async function clearRecordsInDB() {
         function handleLogin(e) {
             e.preventDefault();
             currentUser = {
-                name: "طالب مسجل", // في التطبيق الحقيقي سيتم جلب الاسم من DB
+                name: "طالب مسجل", 
                 badgeId: document.getElementById('loginBadge').value,
                 university: "الكلية التقنية",
                 department: "الحاسوب"
@@ -505,38 +573,34 @@ async function clearRecordsInDB() {
 
         // --- 5. الإدارة ---
        function setAdminLocation() {
-    if (navigator.geolocation) {
-        showToast('جاري استخراج الموقع الدقيق...', 'info');
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                adminLocation = { lat: position.coords.latitude, lng: position.coords.longitude, radius: 500 };
-                localStorage.setItem('asas_admin_location', JSON.stringify(adminLocation));
-                
-                // إضافة الإحداثيات في النص حتى تشوفها بعينك وتتأكد ما أخذ الافتراضي
-                document.getElementById('adminLocStatus').innerHTML = `<span class="text-blue-600 font-bold">✓ تم إعتماد موقعك الجغرافي بنجاح</span> <br> <span class="text-xs text-gray-500">Lat: ${position.coords.latitude.toFixed(4)}, Lng: ${position.coords.longitude.toFixed(4)}</span>`;
-                
-                const smartQR = `${getDailyQRCode()}|${position.coords.latitude}|${position.coords.longitude}`;
-                renderAdminQR(smartQR); 
-                
-                showToast('تم تحديد الموقع بنجاح، الباركود جاهز.', 'success');
-            },
-            (error) => {
-                console.error("خطأ الموقع:", error.message);
-                adminLocation = DEFAULT_LOCATION;
-                localStorage.setItem('asas_admin_location', JSON.stringify(adminLocation));
-                document.getElementById('adminLocStatus').innerHTML = `<span class="text-orange-600 font-bold">⚠️ تم اعتماد الموقع الافتراضي (فشل الـ GPS)</span>`;
-                
-                const smartQR = `${getDailyQRCode()}|${DEFAULT_LOCATION.lat}|${DEFAULT_LOCATION.lng}`;
-                renderAdminQR(smartQR);
-                showToast('الـ GPS مغلق أو بطيء. تم تفعيل الموقع الافتراضي.', 'info');
-            },
-            // التعديل هنا: زيدنا الوقت لـ 20 ثانية حتى اللابتوب يلحق يلقف الموقع
-            { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
-        );
-    } else {
-        showToast('المتصفح لا يدعم تحديد الموقع!', 'error');
-    }
-}
+            if (navigator.geolocation) {
+                showToast('جاري استخراج الموقع الدقيق...', 'info');
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        adminLocation = { lat: position.coords.latitude, lng: position.coords.longitude, radius: 500 };
+                        localStorage.setItem('asas_admin_location', JSON.stringify(adminLocation));
+                        
+                        document.getElementById('adminLocStatus').innerHTML = `<span class="text-blue-600 font-bold">✓ تم إعتماد موقعك الجغرافي بنجاح</span> <br> <span class="text-xs text-gray-500">Lat: ${position.coords.latitude.toFixed(4)}, Lng: ${position.coords.longitude.toFixed(4)}</span>`;
+                        const smartQR = `${getDailyQRCode()}|${position.coords.latitude}|${position.coords.longitude}`;
+                        renderAdminQR(smartQR); 
+                        
+                        showToast('تم تحديد الموقع بنجاح، الباركود جاهز.', 'success');
+                    },
+                    (error) => {
+                        adminLocation = DEFAULT_LOCATION;
+                        localStorage.setItem('asas_admin_location', JSON.stringify(adminLocation));
+                        document.getElementById('adminLocStatus').innerHTML = `<span class="text-orange-600 font-bold">⚠️ تم اعتماد الموقع الافتراضي (فشل الـ GPS)</span>`;
+                        
+                        const smartQR = `${getDailyQRCode()}|${DEFAULT_LOCATION.lat}|${DEFAULT_LOCATION.lng}`;
+                        renderAdminQR(smartQR);
+                        showToast('الـ GPS مغلق أو بطيء. تم تفعيل الموقع الافتراضي.', 'info');
+                    },
+                    { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+                );
+            } else {
+                showToast('المتصفح لا يدعم تحديد الموقع!', 'error');
+            }
+        }
 
         function renderAdminQR(code) {
             const container = document.getElementById('adminQrDisplay');
@@ -546,30 +610,24 @@ async function clearRecordsInDB() {
 
         // --- 6. كاميرا الطالب وإعدادات التقريب (Zoom) ---
         function setupCameraZoom() {
-            // البحث عن عنصر الفيديو الذي ينشئه html5-qrcode
             const videoElement = document.querySelector('#reader video');
             if (videoElement && videoElement.srcObject) {
                 const videoTrack = videoElement.srcObject.getVideoTracks()[0];
                 if (!videoTrack) return;
                 
-                // تأخير بسيط لضمان تهيئة إمكانيات الكاميرا من المتصفح
                 setTimeout(() => {
                     const capabilities = videoTrack.getCapabilities();
-                    // التحقق مما إذا كان المتصفح/الجهاز يدعم التحكم بالتقريب
                     if (capabilities.zoom) {
                         const zoomSlider = document.getElementById('zoomSlider');
                         const zoomContainer = document.getElementById('zoomContainer');
                         
-                        // إعداد قيم الـ Slider بناءً على قدرات الكاميرا الفعلية
                         zoomSlider.min = capabilities.zoom.min;
                         zoomSlider.max = capabilities.zoom.max;
                         zoomSlider.step = capabilities.zoom.step;
                         zoomSlider.value = videoTrack.getSettings().zoom || capabilities.zoom.min;
                         
-                        // إظهار واجهة التقريب
                         zoomContainer.classList.remove('hidden');
                         
-                        // تطبيق التقريب عند تحريك الشريط
                         zoomSlider.oninput = (e) => {
                             videoTrack.applyConstraints({ advanced: [{ zoom: parseFloat(e.target.value) }] })
                                 .catch(err => console.log('خطأ في التقريب', err));
@@ -579,66 +637,106 @@ async function clearRecordsInDB() {
             }
         }
 
-        function openStudentScanner() {
-    const modal = document.getElementById('scannerModal');
-    const statusText = document.getElementById('scannerStatusText');
-    document.getElementById('zoomContainer').classList.add('hidden'); 
-    
-    modal.classList.remove('hidden');
-    statusText.innerText = "وجّه الكاميرا نحو باركود الإدارة...";
-    statusText.className = "text-sm font-semibold text-gray-600";
-    isScannerRunning = true;
-
-    const expectedBaseQR = getDailyQRCode();
-
-    try {
-        html5QrCodeScanner = new Html5Qrcode("reader");
-        html5QrCodeScanner.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: { width: 220, height: 220 } },
-            (decodedText) => {
-                if (!isScannerRunning) return; 
+        // دالة موحدة لمعالجة الباركود بعد القراءة (للكاميرا الحية أو الصورة)
+        function processScannedQR(decodedText) {
+            const expectedBaseQR = getDailyQRCode();
+            const statusText = document.getElementById('scannerStatusText');
+            
+            if (decodedText.startsWith(expectedBaseQR)) {
+                statusText.innerText = "✅ تمت القراءة! جاري فحص الـ GPS بدقة...";
+                statusText.className = "text-sm font-bold text-green-600";
                 
-                // التأكد أن الباركود يبدأ برمز اليوم الصحيح
-                if (decodedText.startsWith(expectedBaseQR)) {
-                    isScannerRunning = false; 
-                    html5QrCodeScanner.stop().then(() => {
-                        statusText.innerText = "✅ تمت القراءة! جاري فحص الـ GPS بدقة...";
-                        statusText.className = "text-sm font-bold text-green-600";
-                        
-                        // استخراج موقع اللابتوب من الباركود اللي قرأه الموبايل
-                        const parts = decodedText.split('|');
-                        let targetLoc = DEFAULT_LOCATION;
-                        
-                        // إذا الباركود بي 3 أجزاء (الرمز | خط الطول | خط العرض)
-                        if(parts.length === 3) {
-                            targetLoc = { lat: parseFloat(parts[1]), lng: parseFloat(parts[2]), radius: 500 };
-                        }
-                        
-                        // إرسال موقع اللابتوب لدالة التحقق حتى تقيس المسافة بينه وبين الموبايل
-                        verifyStudentLocation(targetLoc);
-                    });
-                } else {
-                    statusText.innerText = "❌ الباركود لا يطابق جلسة اليوم!";
-                    statusText.className = "text-sm font-bold text-red-600";
+                const parts = decodedText.split('|');
+                let lat = DEFAULT_LOCATION.lat;
+                let lng = DEFAULT_LOCATION.lng;
+                
+                if(parts.length === 3) {
+                    lat = parseFloat(parts[1]);
+                    lng = parseFloat(parts[2]);
                 }
-            },
-            (error) => {} 
-        ).then(() => {
-            setupCameraZoom();
-        }).catch((err) => {
-            isScannerRunning = false;
-            showToast('يجب إعطاء صلاحية الكاميرا للمتصفح!', 'error');
-            closeStudentScanner();
-        });
-    } catch (e) {
-        isScannerRunning = false;
-        closeStudentScanner();
-    }
-}
+                
+                // تم تصحيح طريقة استدعاء دالة التحقق هنا
+                verifyStudentLocation(lat, lng);
+            } else {
+                statusText.innerText = "❌ الباركود لا يطابق جلسة اليوم!";
+                statusText.className = "text-sm font-bold text-red-600";
+            }
+        }
+
+        // الميزة الجديدة: استلام الصورة من الكاميرا الأصلية وقراءتها
+        function scanNativeImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusText = document.getElementById('scannerStatusText');
+            statusText.innerText = "جاري تحليل الصورة...";
+            statusText.className = "text-sm font-semibold text-blue-600";
+
+            // إيقاف الكاميرا الحية مؤقتاً لتجنب التضارب
+            if (isScannerRunning && html5QrCodeScanner) {
+                html5QrCodeScanner.stop().then(() => {
+                    isScannerRunning = false;
+                    processImageFile(file);
+                }).catch(() => processImageFile(file));
+            } else {
+                processImageFile(file);
+            }
+        }
+
+        // الميزة الجديدة: قراءة الملف واستخراج الباركود منه
+        function processImageFile(file) {
+            const html5QrCode = new Html5Qrcode("reader");
+            const statusText = document.getElementById('scannerStatusText');
+            
+            html5QrCode.scanFile(file, true)
+            .then(decodedText => {
+                processScannedQR(decodedText);
+            })
+            .catch(err => {
+                statusText.innerText = "❌ لم يتم العثور على باركود، حاول التقاط الصورة بوضوح.";
+                statusText.className = "text-sm font-bold text-red-600";
+            });
+        }
+
+        function openStudentScanner() {
+            const modal = document.getElementById('scannerModal');
+            const statusText = document.getElementById('scannerStatusText');
+            document.getElementById('zoomContainer').classList.add('hidden'); 
+            // إعادة تصفير مدخل الملف عند فتح النافذة
+            document.getElementById('nativeCameraInput').value = ''; 
+            
+            modal.classList.remove('hidden');
+            statusText.innerText = "وجّه الكاميرا نحو باركود الإدارة...";
+            statusText.className = "text-sm font-semibold text-gray-600";
+            isScannerRunning = true;
+
+            try {
+                html5QrCodeScanner = new Html5Qrcode("reader");
+                html5QrCodeScanner.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: { width: 220, height: 220 } },
+                    (decodedText) => {
+                        if (!isScannerRunning) return; 
+                        isScannerRunning = false; 
+                        html5QrCodeScanner.stop().then(() => {
+                            processScannedQR(decodedText);
+                        });
+                    },
+                    (error) => {} 
+                ).then(() => {
+                    setupCameraZoom();
+                }).catch((err) => {
+                    isScannerRunning = false;
+                    showToast('تم إيقاف الكاميرا المباشرة، يمكنك استخدام الكاميرا الأصلية.', 'info');
+                });
+            } catch (e) {
+                isScannerRunning = false;
+            }
+        }
 
         function closeStudentScanner() {
             isScannerRunning = false;
+            document.getElementById('nativeCameraInput').value = ''; // تصفير الملف
             if (html5QrCodeScanner) {
                 html5QrCodeScanner.stop().then(() => {
                     document.getElementById('scannerModal').classList.add('hidden');
@@ -651,36 +749,36 @@ async function clearRecordsInDB() {
             }
         }
 
-       function verifyStudentLocation(scannedAdminLat, scannedAdminLng) {
-    showToast('جاري مطابقة موقعك مع القاعة...', 'info');
+        function verifyStudentLocation(scannedAdminLat, scannedAdminLng) {
+            showToast('جاري مطابقة موقعك مع القاعة...', 'info');
 
-    navigator.geolocation.getCurrentPosition(
-        (pos) => {
-            // حساب المسافة بين موقع الطالب الحقيقي والإحداثيات القادمة من الباركود
-            const distance = getDistanceInMeters(
-                pos.coords.latitude, 
-                pos.coords.longitude, 
-                parseFloat(scannedAdminLat), 
-                parseFloat(scannedAdminLng)
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const distance = getDistanceInMeters(
+                        pos.coords.latitude, 
+                        pos.coords.longitude, 
+                        parseFloat(scannedAdminLat), 
+                        parseFloat(scannedAdminLng)
+                    );
+
+                    const ALLOWED_RADIUS = 500; 
+
+                    if (distance > ALLOWED_RADIUS) {
+                        showToast(`أنت بعيد عن القاعة بمسافة ${Math.round(distance)} متر!`, 'error');
+                        setTimeout(closeStudentScanner, 3000);
+                    } else {
+                        recordAttendance('مؤكد (GPS)');
+                        setTimeout(closeStudentScanner, 1000);
+                    }
+                },
+                (error) => {
+                    showToast('الرجاء تفعيل الـ GPS للتحقق من تواجدك!', 'error');
+                    setTimeout(closeStudentScanner, 2000);
+                },
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
             );
+        }
 
-            const ALLOWED_RADIUS = 500; // نطاق المسموح به بالأمتار (500 متر)
-
-            if (distance > ALLOWED_RADIUS) {
-                showToast(`أنت بعيد عن القاعة بمسافة ${Math.round(distance)} متر!`, 'error');
-                setTimeout(closeStudentScanner, 3000);
-            } else {
-                recordAttendance('مؤكد (GPS)'); // تسجيل الحضور
-                setTimeout(closeStudentScanner, 1000);
-            }
-        },
-        (error) => {
-            showToast('الرجاء تفعيل الـ GPS للتحقق من تواجدك!', 'error');
-            setTimeout(closeStudentScanner, 2000);
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
-}
         // --- 7. عمليات الواجهة والحضور اليدوي ---
         function recordAttendance(status) {
             if (attendanceList.some(s => s.badgeId === currentUser.badgeId)) {
@@ -771,7 +869,6 @@ async function clearRecordsInDB() {
             }
         }
 
-        // المعادلة الرياضية لاحتساب المسافة بين نقطتين جغرافيتين
         function getDistanceInMeters(lat1, lon1, lat2, lon2) {
             const R = 6371e3; const φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180;
             const Δφ = (lat2 - lat1) * Math.PI / 180, Δλ = (lon2 - lon1) * Math.PI / 180;
