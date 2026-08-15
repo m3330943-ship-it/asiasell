@@ -431,7 +431,7 @@
         };
 
        // --- 3. التخاطب السحابي ---
-        async function loadAttendanceFromDB() {
+       async function loadAttendanceFromDB() {
             let localData = JSON.parse(localStorage.getItem('asas_attendance_list')) || [];
             if (localData.length > 0) {
                 attendanceList = localData;
@@ -441,7 +441,8 @@
                 const response = await fetch(API_URL);
                 if (response.ok) {
                     const serverData = await response.json();
-                    if (serverData && Array.isArray(serverData) && serverData.length > 0) {
+                    // التعديل هنا: سمحنا للموبايل يقبل البيانات من السيرفر حتى لو كانت فارغة (حتى يتصفر السجل)
+                    if (serverData && Array.isArray(serverData)) {
                         attendanceList = serverData;
                         localStorage.setItem('asas_attendance_list', JSON.stringify(attendanceList));
                         renderAttendanceTable();
